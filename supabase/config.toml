@@ -1,0 +1,35 @@
+[functions.create-post]
+enabled = true
+verify_jwt = false
+import_map = "./functions/create-post/deno.json"
+entrypoint = "./functions/create-post/index.ts"
+
+[functions.get-posts]
+enabled = true
+verify_jwt = false
+import_map = "./functions/get-posts/deno.json"
+entrypoint = "./functions/get-posts/index.ts"
+
+[functions.delete-post]
+enabled = true
+verify_jwt = false
+import_map = "./functions/delete-post/deno.json"
+entrypoint = "./functions/delete-post/index.ts"
+
+[functions.toggle-like]
+enabled = true
+verify_jwt = false
+import_map = "./functions/toggle-like/deno.json"
+entrypoint = "./functions/toggle-like/index.ts"
+
+[functions.get-profile]
+enabled = true
+verify_jwt = false
+import_map = "./functions/get-profile/deno.json"
+entrypoint = "./functions/get-profile/index.ts"
+
+[functions.update-profile]
+enabled = true
+verify_jwt = false
+import_map = "./functions/update-profile/deno.json"
+entrypoint = "./functions/update-profile/index.ts"

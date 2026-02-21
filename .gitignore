@@ -46,3 +46,7 @@ yarn-error.*
 .env.development
 .env.staging
 .env.production
+
+# Supabase
+supabase/.branches
+supabase/.temp
