@@ -144,6 +144,36 @@ export const supabase = createClient(url, key, {
 
 ---
 
+#### 6. **PostgREST Join Fails - Foreign Key to Wrong Table**
+
+**Problem:** Edge Function `get-posts` returned 500 error: `Could not find a relationship between 'posts' and 'profiles'`
+
+**Solution:** Change foreign key to point to correct table:
+```sql
+ALTER TABLE posts DROP CONSTRAINT posts_user_id_fkey;
+ALTER TABLE posts ADD CONSTRAINT posts_user_id_fkey 
+  FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+NOTIFY pgrst, 'reload schema';
+```
+
+**Lesson:** PostgREST requires foreign keys to exist for automatic joins.
+
+---
+
+#### 7. **React Native Does Not Have `confirm()` Function**
+
+**Problem:** Using `confirm()` crashed the app - it's a web-only API.
+
+**Solution:** Use React Native's `Alert.alert()` instead:
+```typescript
+import { Alert } from 'react-native';
+
+Alert.alert('Delete Post', 'Are you sure?', [
+  { text: 'Cancel', style: 'cancel' },
+  { text: 'Delete', style: 'destructive', onPress: () => deletePost() }
+]);
+```
+
 ## ⚡ Quick Setup
 
 ### Prerequisites
