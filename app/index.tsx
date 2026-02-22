@@ -22,7 +22,7 @@ export default function Index() {
   const deletePost = useDeletePost();
 
   const [email, setEmail] = useState('test@test.com');
-  const [password, setPassword] = useState('password123');
+  const [password, setPassword] = useState('Test1234!');
   const [postContent, setPostContent] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
 
@@ -127,7 +127,7 @@ export default function Index() {
           </Typography>
         </Pressable>
 
-        {/* Login Card */}
+        {/* Login Card - ONLY when NOT logged in */}
         {!user && (
           <Card variant="elevated" style={{ marginBottom: spacing.lg }}>
             <CardHeader>
@@ -166,7 +166,7 @@ export default function Index() {
           </Card>
         )}
 
-        {/* Logged In Actions */}
+        {/* Logged In User Info - ONLY when logged in */}
         {user && (
           <Card variant="filled" style={{ marginBottom: spacing.lg }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -186,7 +186,7 @@ export default function Index() {
           </Card>
         )}
 
-        {/* Create Post Button */}
+        {/* Create Post Button - ONLY when logged in */}
         {user && !showCreatePost && (
           <Button
             title="✨ Create Post"
@@ -197,7 +197,7 @@ export default function Index() {
           />
         )}
 
-        {/* Create Post Form */}
+        {/* Create Post Form - ONLY when logged in AND form is open */}
         {user && showCreatePost && (
           <Card variant="elevated" style={{ marginBottom: spacing.lg }}>
             <CardHeader>
@@ -230,83 +230,95 @@ export default function Index() {
           </Card>
         )}
 
-        {/* Feed Header */}
-        <View style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: spacing.md 
-        }}>
-          <Typography variant="h4">
-            Feed {posts && `(${posts.length})`}
-          </Typography>
-        </View>
-
-        {/* Posts */}
-        {posts && posts.length > 0 ? (
-          posts.map((post) => (
-            <Card 
-              key={post.id} 
-              variant="elevated"
-              style={{ marginBottom: spacing.lg }}
-            >
-              {/* Post Header */}
-              <CardHeader style={{ marginBottom: spacing.sm }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-                  <Avatar 
-                    name={post.user.username || 'User'} 
-                    size="md"
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Typography variant="body" weight="semibold">
-                      @{post.user.username}
-                    </Typography>
-                    <Typography variant="caption">
-                      {formatTimeAgo(post.created_at)}
-                    </Typography>
-                  </View>
-                </View>
-              </CardHeader>
-
-              {/* Post Content */}
-              <CardContent>
-                <Typography variant="body" style={{ lineHeight: 24 }}>
-                  {post.content}
-                </Typography>
-              </CardContent>
-
-              {/* Post Actions */}
-              <CardFooter>
-                <Button
-                  title={`${post.user_has_liked ? '❤️' : '🤍'} ${post.like_count}`}
-                  onPress={() => toggleLike.mutate(post.id)}
-                  variant={post.user_has_liked ? 'ghost' : 'ghost'}
-                  size="sm"
-                  disabled={!user}
-                />
-                
-                {user && post.user.id === user.id && (
-                  <Button
-                    title="Delete"
-                    onPress={() => handleDeletePost(post.id)}
-                    variant="danger"
-                    size="sm"
-                  />
-                )}
-              </CardFooter>
-            </Card>
-          ))
-        ) : (
-          <Card variant="outlined">
-            <View style={{ alignItems: 'center', padding: spacing.xl }}>
-              <Typography variant="h4" style={{ marginBottom: spacing.sm }}>
-                No posts yet 📭
-              </Typography>
-              <Typography variant="body" color={colors.text.secondary} align="center">
-                Be the first to share something on campus!
+        {/* FEED - ONLY FOR AUTHENTICATED USERS */}
+        {user && (
+          <>
+            {/* Feed Header */}
+            <View style={{ 
+              flexDirection: 'row', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: spacing.md 
+            }}>
+              <Typography variant="h4">
+                Feed {posts && `(${posts.length})`}
               </Typography>
             </View>
-          </Card>
+
+            {/* Posts */}
+            {postsLoading ? (
+              <Card variant="outlined">
+                <View style={{ alignItems: 'center', padding: spacing.xl }}>
+                  <Typography variant="body" color={colors.text.secondary}>
+                    Loading posts...
+                  </Typography>
+                </View>
+              </Card>
+            ) : posts && posts.length > 0 ? (
+              posts.map((post) => (
+                <Card 
+                  key={post.id} 
+                  variant="elevated"
+                  style={{ marginBottom: spacing.lg }}
+                >
+                  {/* Post Header */}
+                  <CardHeader style={{ marginBottom: spacing.sm }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                      <Avatar 
+                        name={post.user.username || 'User'} 
+                        size="md"
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Typography variant="body" weight="semibold">
+                          @{post.user.username}
+                        </Typography>
+                        <Typography variant="caption">
+                          {formatTimeAgo(post.created_at)}
+                        </Typography>
+                      </View>
+                    </View>
+                  </CardHeader>
+
+                  {/* Post Content */}
+                  <CardContent>
+                    <Typography variant="body" style={{ lineHeight: 24 }}>
+                      {post.content}
+                    </Typography>
+                  </CardContent>
+
+                  {/* Post Actions */}
+                  <CardFooter>
+                    <Button
+                      title={`${post.user_has_liked ? '❤️' : '🤍'} ${post.like_count}`}
+                      onPress={() => toggleLike.mutate(post.id)}
+                      variant="ghost"
+                      size="sm"
+                    />
+                    
+                    {post.user.id === user.id && (
+                      <Button
+                        title="Delete"
+                        onPress={() => handleDeletePost(post.id)}
+                        variant="danger"
+                        size="sm"
+                      />
+                    )}
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <Card variant="outlined">
+                <View style={{ alignItems: 'center', padding: spacing.xl }}>
+                  <Typography variant="h4" style={{ marginBottom: spacing.sm }}>
+                    No posts yet 📭
+                  </Typography>
+                  <Typography variant="body" color={colors.text.secondary} align="center">
+                    Be the first to share something on campus!
+                  </Typography>
+                </View>
+              </Card>
+            )}
+          </>
         )}
 
         {/* Bottom Padding */}
