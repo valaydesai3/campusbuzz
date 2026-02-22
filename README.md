@@ -1,5 +1,7 @@
 # CampusBuzz - React Native Learning App
 
+Learning project for mastering React Native + Supabase before building **HogletHub** (production app).
+
 **Tech Stack:** Expo SDK 54, React Native, TypeScript, Supabase (Edge Functions), TanStack Query
 
 ---
@@ -36,7 +38,7 @@ Infinite loading spinner on Android
 
 ---
 
-#### 2. **Windows Environment Variables**
+#### 2. **Windows Environment Variables **
 
 **Problem:** Unix-style environment variables don't work in Windows PowerShell:
 ```json
@@ -95,7 +97,7 @@ entrypoint = "./functions/create-post/index.ts"
 
 ---
 
-#### 4. **Metro Config ESM Error on Windows**
+#### 4. **Metro Config ESM Error on Windows **
 
 **Problem:**
 ```
@@ -144,35 +146,97 @@ export const supabase = createClient(url, key, {
 
 ---
 
-#### 6. **PostgREST Join Fails - Foreign Key to Wrong Table**
+#### 6. **PostgREST Join Fails - Foreign Key Must Point to Correct Table **
 
-**Problem:** Edge Function `get-posts` returned 500 error: `Could not find a relationship between 'posts' and 'profiles'`
+**Problem:** Edge Function `get-posts` returned 500 error when trying to join `posts` with `profiles`:
+```
+Error: Could not find a relationship between 'posts' and 'profiles' in the schema cache
+```
 
-**Solution:** Change foreign key to point to correct table:
+**Root Cause:** The foreign key `posts.user_id` was pointing to `auth.users.id` instead of `profiles.id`. PostgREST requires foreign keys to exist for automatic joins to work.
+
+**How We Found It:**
 ```sql
+-- Check existing constraints
+SELECT conname, pg_get_constraintdef(oid) 
+FROM pg_constraint 
+WHERE conrelid = 'posts'::regclass;
+
+-- Result showed:
+-- posts_user_id_fkey → REFERENCES auth.users(id)  ← Wrong!
+```
+
+**Solution:** Change the foreign key to reference `profiles` instead:
+```sql
+-- Drop old foreign key
 ALTER TABLE posts DROP CONSTRAINT posts_user_id_fkey;
-ALTER TABLE posts ADD CONSTRAINT posts_user_id_fkey 
-  FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
+
+-- Add new foreign key to profiles
+ALTER TABLE posts 
+ADD CONSTRAINT posts_user_id_fkey 
+FOREIGN KEY (user_id) 
+REFERENCES profiles(id) 
+ON DELETE CASCADE;
+
+-- Reload PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 ```
 
-**Lesson:** PostgREST requires foreign keys to exist for automatic joins.
+**Then use join syntax in Edge Function:**
+```typescript
+const { data: posts } = await supabaseClient
+  .from('posts')
+  .select(`
+    id,
+    content,
+    profiles (
+      id,
+      username,
+      avatar_url
+    )
+  `);
+```
+
+**Lesson:** PostgREST (Supabase's REST API) uses foreign keys to enable automatic joins. If the foreign key points to the wrong table, joins will fail even if the data relationship logically exists.
 
 ---
 
-#### 7. **React Native Does Not Have `confirm()` Function**
+#### 7. **React Native Does Not Have `confirm()` Function **
 
-**Problem:** Using `confirm()` crashed the app - it's a web-only API.
+**Problem:** Using `confirm()` for delete confirmation crashed the app:
+```
+Property 'confirm' doesn't exist
+```
+
+**Root Cause:** `confirm()` is a web browser API, not available in React Native.
 
 **Solution:** Use React Native's `Alert.alert()` instead:
 ```typescript
+// ❌ WRONG - Web only
+if (confirm('Delete this post?')) {
+  deletePost.mutate(postId);
+}
+
+// ✅ CORRECT - React Native
 import { Alert } from 'react-native';
 
-Alert.alert('Delete Post', 'Are you sure?', [
-  { text: 'Cancel', style: 'cancel' },
-  { text: 'Delete', style: 'destructive', onPress: () => deletePost() }
-]);
+Alert.alert(
+  'Delete Post',
+  'Are you sure?',
+  [
+    { text: 'Cancel', style: 'cancel' },
+    { 
+      text: 'Delete', 
+      style: 'destructive',
+      onPress: () => deletePost.mutate(postId)
+    }
+  ]
+);
 ```
+
+**Lesson:** Many Web APIs don't exist in React Native. Always use RN-specific components (Alert, Modal, etc.) instead of browser APIs.
+
+---
 
 ## ⚡ Quick Setup
 
@@ -210,15 +274,44 @@ npm run dev
 
 ```
 campusbuzz/
-├── app/                    # Expo Router pages
-├── components/             # Reusable UI components
-├── lib/                    # Supabase, API clients
-├── hooks/                  # React hooks (useAuth, usePosts, etc.)
+├── app/                         # Expo Router pages
+│   ├── index.tsx                # Main feed (Gen Z UI)
+│   └── design-system.tsx        # Component showcase
+├── components/ui/               # Reusable UI components (Design System)
+│   ├── Button.tsx               # 5 variants, 3 sizes
+│   ├── Card.tsx                 # 3 variants + sub-components
+│   ├── Input.tsx                # With labels, icons, errors
+│   ├── Avatar.tsx               # Initials, badges, groups
+│   └── Typography.tsx           # Headings, body, captions
+├── lib/                         # Core utilities
+│   ├── design-system.ts         # Colors, spacing, typography, shadows
+│   ├── supabase.ts              # Supabase client with SecureStore
+│   ├── api.ts                   # API client for Edge Functions
+│   └── env.ts                   # Type-safe environment variables
+├── hooks/                       # React hooks (TanStack Query)
+│   ├── useAuth.ts               # Auth state management
+│   ├── usePosts.ts              # Fetch posts query
+│   ├── useCreatePost.ts         # Create post mutation
+│   ├── useDeletePost.ts         # Delete post mutation
+│   └── useToggleLike.ts         # Like/unlike mutation
 ├── supabase/
-│   ├── config.toml         # IMPORTANT: verify_jwt = false
-│   └── functions/          # Edge Functions (Deno)
-├── .env.development        # Environment variables (gitignored)
-└── package.json            # LOCKED versions (no ^ or ~)
+│   ├── config.toml              # IMPORTANT: verify_jwt = false
+│   └── functions/               # Edge Functions (Deno)
+├── .env.development             # Environment variables (gitignored)
+└── package.json                 # LOCKED versions (no ^ or ~)
 ```
+
+---
+
+## 🎨 Design System
+
+Built with production-grade design tokens (no Tailwind/NativeWind):
+- **Colors:** Vibrant primary (red), secondary (purple), semantic colors
+- **Typography:** Scale from 12px to 36px with consistent weights
+- **Spacing:** 4px to 64px scale
+- **Shadows:** 4 levels (sm, md, lg, xl)
+- **Components:** Button, Card, Input, Avatar, Typography
+
+**Why no NativeWind?** Using design tokens is the industry standard for production apps (Airbnb, Instagram, Uber all use this approach). More control, type-safe, zero dependencies.
 
 ---
