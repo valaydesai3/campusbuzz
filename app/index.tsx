@@ -1,4 +1,4 @@
-import { View, ScrollView, Alert, RefreshControl, Pressable } from 'react-native';
+import { View, ScrollView, Alert, RefreshControl, Pressable, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../hooks/useAuth';
@@ -16,7 +16,7 @@ import { colors, spacing, borderRadius } from '../lib/design-system';
 export default function Index() {
   const router = useRouter();
   const { user, signIn, signOut, loading: authLoading } = useAuth();
-  const { data: posts, isLoading: postsLoading, refetch } = usePosts();
+  const { data: posts, isLoading: postsLoading, error: postsError, refetch } = usePosts();
   const createPost = useCreatePost();
   const toggleLike = useToggleLike();
   const deletePost = useDeletePost();
@@ -247,11 +247,22 @@ export default function Index() {
 
             {/* Posts */}
             {postsLoading ? (
-              <Card variant="outlined">
+              <View style={{ alignItems: 'center', padding: spacing.xl }}>
+                <ActivityIndicator size="large" color={colors.primary[500]} />
+                <Typography variant="bodySmall" color={colors.text.secondary} style={{ marginTop: spacing.md }}>
+                  Loading posts...
+                </Typography>
+              </View>
+            ) : postsError ? (
+              <Card variant="outlined" style={{ borderColor: colors.error }}>
                 <View style={{ alignItems: 'center', padding: spacing.xl }}>
-                  <Typography variant="body" color={colors.text.secondary}>
-                    Loading posts...
+                  <Typography variant="h4" style={{ marginBottom: spacing.sm }}>
+                    Something went wrong 😕
                   </Typography>
+                  <Typography variant="body" color={colors.text.secondary} align="center" style={{ marginBottom: spacing.lg }}>
+                    {postsError.message || 'Failed to load posts. Please try again.'}
+                  </Typography>
+                  <Button title="Try Again" onPress={() => refetch()} variant="outline" />
                 </View>
               </Card>
             ) : posts && posts.length > 0 ? (
@@ -312,9 +323,14 @@ export default function Index() {
                   <Typography variant="h4" style={{ marginBottom: spacing.sm }}>
                     No posts yet 📭
                   </Typography>
-                  <Typography variant="body" color={colors.text.secondary} align="center">
+                  <Typography variant="body" color={colors.text.secondary} align="center" style={{ marginBottom: spacing.lg }}>
                     Be the first to share something on campus!
                   </Typography>
+                  <Button
+                    title="✨ Be the First to Post!"
+                    onPress={() => setShowCreatePost(true)}
+                    variant="secondary"
+                  />
                 </View>
               </Card>
             )}

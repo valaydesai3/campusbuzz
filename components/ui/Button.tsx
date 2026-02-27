@@ -93,6 +93,7 @@ export function Button({
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
         borderRadius: borderRadius.lg,
+        minHeight: 48,
       },
       text: {
         fontSize: typography.fontSize.base,
