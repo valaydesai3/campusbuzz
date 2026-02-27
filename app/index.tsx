@@ -11,6 +11,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card
 import { Input, TextArea } from '../components/ui/Input';
 import { Avatar } from '../components/ui/Avatar';
 import { Typography } from '../components/ui/Typography';
+import { PostComments } from '../components/PostComments';
 import { colors, spacing, borderRadius } from '../lib/design-system';
 
 export default function Index() {
@@ -305,7 +306,7 @@ export default function Index() {
                       variant="ghost"
                       size="sm"
                     />
-                    
+
                     {post.user.id === user.id && (
                       <Button
                         title="Delete"
@@ -315,6 +316,13 @@ export default function Index() {
                       />
                     )}
                   </CardFooter>
+
+                  {/* Comments */}
+                  <PostComments
+                    postId={post.id}
+                    commentCount={post.comment_count}
+                    currentUserId={user.id}
+                  />
                 </Card>
               ))
             ) : (
