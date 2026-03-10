@@ -22,6 +22,34 @@ export interface GetPostsResponse {
   };
   like_count: number;
   user_has_liked: boolean;
+  comment_count: number;
+}
+
+export interface GetCommentsResponse {
+  id: string;
+  content: string;
+  created_at: string;
+  user: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
+export interface AddCommentRequest {
+  post_id: string;
+  content: string;
+}
+
+export interface AddCommentResponse {
+  id: string;
+  content: string;
+  created_at: string;
+  user: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
 }
 
 export interface DeletePostRequest {

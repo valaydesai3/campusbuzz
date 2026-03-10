@@ -83,6 +83,16 @@ serve(async (req) => {
           userHasLiked = !!like;
         }
 
+        // Get comment count
+        const { count: commentCount, error: commentCountError } = await supabaseClient
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id);
+
+        if (commentCountError) {
+          console.error('get-posts: Comment count error:', commentCountError);
+        }
+
         return {
           id: post.id,
           content: post.content,
@@ -90,6 +100,7 @@ serve(async (req) => {
           user: post.profiles,
           like_count: count || 0,
           user_has_liked: userHasLiked,
+          comment_count: commentCount || 0,
         };
       })
     );

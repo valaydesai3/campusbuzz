@@ -33,3 +33,15 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/update-profile/deno.json"
 entrypoint = "./functions/update-profile/index.ts"
+
+[functions.get-comments]
+enabled = true
+verify_jwt = false
+import_map = "./functions/get-comments/deno.json"
+entrypoint = "./functions/get-comments/index.ts"
+
+[functions.add-comment]
+enabled = true
+verify_jwt = false
+import_map = "./functions/add-comment/deno.json"
+entrypoint = "./functions/add-comment/index.ts"
